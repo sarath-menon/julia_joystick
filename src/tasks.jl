@@ -1,10 +1,12 @@
 
-struct JoystickState3
+struct JoystickState5
     horizontal_axis::Float64
     vertical_axis::Float64
+    rotate_axis::Float64
+    extra_axis::Float64
 end
 
-JoystickState = JoystickState3
+JoystickState = JoystickState5
 
 
 function get_joystick_state(js)
@@ -13,21 +15,24 @@ function get_joystick_state(js)
 
     roll_val = axis_vals[1]
     pitch_val = -axis_vals[2]
+    yaw_val = axis_vals[3]
+    throttle_val = -axis_vals[4]
 
-    js_state = JoystickState(roll_val, pitch_val)
+    js_state = JoystickState(roll_val, pitch_val, yaw_val, throttle_val)
 
     return js_state
 end
 
-function joystick_plot(js, axis_obs)
+function joystick_plot(js)
 
     while (joystick_plot_toggle.active[])
 
         # get axis values
-        # axis_vals = GLFW.GetJoystickAxes(js.device)
         js_state = get_joystick_state(js)
 
         axis_obs[] = Point2f(js_state.horizontal_axis, js_state.vertical_axis)
+        throttle_obs[] = Point2f(5, js_state.extra_axis)
+        yaw_obs[] = Point2f(5, js_state.rotate_axis)
 
         sleep(0.01)
     end
@@ -45,7 +50,7 @@ end
 on(joystick_plot_toggle.active) do state
     if state == true
         @async begin
-            joystick_plot(js, axis_obs)
+            joystick_plot(js)
         end
     end
 

@@ -14,8 +14,14 @@ fig = Figure()
 g_plot = fig[1, 1] = GridLayout()
 g_ui = fig[2, 1] = GridLayout()
 
-ax = Axis(g_plot[1, 1], xlabel="x label", ylabel="y label",
+ax = Axis(g_plot[1, 1], xlabel="x label",
     title="Title")
+
+ax2 = Axis(g_plot[1, 2], xlabel="x label", xgridvisible=false, ygridvisible=false,
+    title="Throttle")
+
+ax3 = Axis(g_plot[1, 3], xlabel="x label", xgridvisible=false, ygridvisible=false,
+    title="yaw_val")
 
 # add buttons
 start_read_btn = Button(g_ui[1, 1], label="start reading", tellwidth=false)
@@ -25,6 +31,10 @@ joystick_plot_toggle = Toggle(fig, active=false, height=30, width=80)
 label = Label(fig, lift(x -> x ? "Joytick enabled" : "Joytick disabled", joystick_read_toggle.active))
 
 g_ui[1, 2] = grid!(hcat(joystick_plot_toggle, label), tellwidth=false, tellheight=false)
+
+# axes size adjust 
+colsize!(g_plot, 2, Auto(0.1))
+colsize!(g_plot, 3, Auto(0.1))
 
 ##
 
@@ -109,10 +119,13 @@ end
 
 ## joystick axes Plotting
 axis_obs = Observable(Point2f(0.0, 0.0))
+throttle_obs = Observable(Point2f(5.0, 0.0))
+yaw_obs = Observable(Point2f(5.0, 0.0))
 
 scatter!(ax, axis_obs, markersize=50, color=:black)
+scatter!(ax2, throttle_obs, markersize=60, color=:black)
+scatter!(ax3, yaw_obs, markersize=60, color=:black)
 
-axis_obs[] = Point2f(0.0, 0.0)
 
 
 
