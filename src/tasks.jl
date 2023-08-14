@@ -1,8 +1,6 @@
 
 
-# function joystick_read()
-
-@async begin
+function joystick_read(js, axis_obs)
 
     while (joystick_read_toggle.active[])
 
@@ -16,11 +14,13 @@
     println("Joystick disabled")
 end
 
-# end
+
 
 on(joystick_read_toggle.active) do state
     if state == true
-        joystick_read()
+        @async begin
+            joystick_read(js, axis_obs)
+        end
     end
 
 end
