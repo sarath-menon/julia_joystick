@@ -1,0 +1,4 @@
+[deps]
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+Joysticks = "82f05805-4863-42dc-b1a7-0852bd62c632"
+Observables = "510215fc-4207-5dde-b226-833fc4488ee2"
