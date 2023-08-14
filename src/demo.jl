@@ -21,10 +21,10 @@ ax = Axis(g_plot[1, 1], xlabel="x label", ylabel="y label",
 start_read_btn = Button(g_ui[1, 1], label="start reading", tellwidth=false)
 # stop_read_btn = Button(g_ui[1, 2], label="stop reading", tellwidth=false)
 
-joystick_read_toggle = Toggle(fig, active=false, height=30, width=80)
+joystick_plot_toggle = Toggle(fig, active=false, height=30, width=80)
 label = Label(fig, lift(x -> x ? "Joytick enabled" : "Joytick disabled", joystick_read_toggle.active))
 
-g_ui[1, 2] = grid!(hcat(joystick_read_toggle, label), tellwidth=false, tellheight=false)
+g_ui[1, 2] = grid!(hcat(joystick_plot_toggle, label), tellwidth=false, tellheight=false)
 
 ##
 
@@ -107,7 +107,7 @@ on(jsbuttons.btn12) do val
 end
 
 
-# joystick axes Plotting
+## joystick axes Plotting
 axis_obs = Observable(Point2f(0.0, 0.0))
 
 scatter!(ax, axis_obs, markersize=50, color=:black)
