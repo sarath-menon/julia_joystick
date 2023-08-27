@@ -1,9 +1,12 @@
 module Joystick
 
 using GLFW
+using GLMakie
+GLMakie.activate!(inline=false)
 
 export JSDevice, JoystickState
 export connect_joystick, get_joystick_state, joystick_plot, show
+export create_visualizer
 
 struct JSDevice1
     name::String
@@ -71,16 +74,72 @@ function Base.show(js_state::JoystickState)
 
 end
 
-function joystick_plot(js)
+function create_visualizer()
+    # Plotting
+    fig = Figure()
+    display(fig)
 
-    while (joystick_plot_toggle.active[])
+    # grid layouts
+    g_plot = fig[1, 1] = GridLayout()
+    g_ui = fig[2, 1] = GridLayout()
+
+    ax = Axis(g_plot[1, 1], xlabel="x label",
+        title="Title")
+
+    ax2 = Axis(g_plot[1, 2], xlabel="x label", xgridvisible=false, ygridvisible=false,
+        title="Throttle")
+
+    ax3 = Axis(g_plot[1, 3], xlabel="x label", xgridvisible=false, ygridvisible=false,
+        title="yaw_val")
+
+    # add buttons
+    start_vis_btn = Button(g_ui[1, 1], label="Start Visualization", tellwidth=false)
+    #stop_read_btn = Button(g_ui[1, 2], label="stop reading", tellwidth=false)
+
+    joystick_plot_toggle = Toggle(fig, active=false, height=30, width=80)
+    label = Label(fig, lift(x -> x ? "Joytick enabled" : "Joytick disabled", joystick_plot_toggle.active))
+
+    g_ui[1, 2] = grid!(hcat(joystick_plot_toggle, label), tellwidth=false, tellheight=false)
+
+    # axes size adjust 
+    rowsize!(g_ui, 1, Auto(0.1))
+
+    colsize!(g_plot, 2, Auto(0.1))
+    colsize!(g_plot, 3, Auto(0.1))
+
+    ## initial joystick axes Plotting
+    horizontal_vertical_obs = Observable(Point2f(0.0, 0.0))
+    stick_rotate_obs = Observable(Point2f(5.0, 0.0))
+    knob_rotate_obs = Observable(Point2f(5.0, 0.0))
+
+    scatter!(ax, horizontal_vertical_obs, markersize=50, color=:black)
+    scatter!(ax2, stick_rotate_obs, markersize=60, color=:black)
+    scatter!(ax3, knob_rotate_obs, markersize=60, color=:black)
+
+    plot_elements = Dict()
+
+    plot_elements[:fig] = fig
+    plot_elements[:joystick_plot_toggle] = joystick_plot_toggle
+    plot_elements[:start_vis_btn] = start_vis_btn
+
+    plot_data = (; horizontal_vertical=horizontal_vertical_obs, stick_rotate=stick_rotate_obs, knob_rotate=knob_rotate_obs)
+
+    return plot_elements, plot_data
+end
+
+
+function joystick_plot(js, plot_elements, plot_data, vis_flag)
+
+    joystick_plot_toggle = plot_elements[:joystick_plot_toggle]
+
+    while (joystick_plot_toggle.active[] && vis_flag == true)
 
         # get axis values
         js_state = get_joystick_state(js)
 
-        axis_obs[] = Point2f(js_state.horizontal_axis, js_state.vertical_axis)
-        throttle_obs[] = Point2f(5, js_state.extra_axis)
-        yaw_obs[] = Point2f(5, js_state.rotate_axis)
+        plot_data.horizontal_vertical[] = Point2f(js_state.horizontal_axis, js_state.vertical_axis)
+        plot_data.stick_rotate[] = Point2f(5, js_state.stick_rotate_axis)
+        plot_data.knob_rotate[] = Point2f(5, js_state.knob_rotate_axis)
 
         sleep(0.01)
     end
@@ -88,6 +147,33 @@ function joystick_plot(js)
     println("Joystick disabled")
 end
 
+
+function start_visualization(js, plot_elements, plot_data)
+
+    start_vis_btn = plot_elements[:start_vis_btn]
+    joystick_plot_toggle = plot_elements[:joystick_plot_toggle]
+
+    vis_flag = false
+
+    on(start_vis_btn.clicks) do click
+
+        # start visualization if not already running
+        if vis_flag == false && joystick_plot_toggle.active[]
+
+            println("Vis started")
+
+            @async begin
+                # set flag
+                vis_flag = true
+
+                joystick_plot(js, plot_elements, plot_data, vis_flag)
+            end
+        end
+
+        # stop visulization if already running
+        vis_flag = false
+    end
+end
 
 
 end
