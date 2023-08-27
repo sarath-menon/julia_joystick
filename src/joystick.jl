@@ -93,7 +93,7 @@ function create_visualizer()
         title="yaw_val")
 
     # add buttons
-    start_vis_btn = Button(g_ui[1, 1], label="Start Visualization", tellwidth=false)
+    calibrate_btn = Button(g_ui[1, 1], label="Calibrate", tellwidth=false)
     #stop_read_btn = Button(g_ui[1, 2], label="stop reading", tellwidth=false)
 
     joystick_plot_toggle = Toggle(fig, active=false, height=30, width=80)
@@ -120,7 +120,7 @@ function create_visualizer()
 
     plot_elements[:fig] = fig
     plot_elements[:joystick_plot_toggle] = joystick_plot_toggle
-    plot_elements[:start_vis_btn] = start_vis_btn
+    plot_elements[:calibrate_btn] = calibrate_btn
 
     plot_data = (; horizontal_vertical=horizontal_vertical_obs, stick_rotate=stick_rotate_obs, knob_rotate=knob_rotate_obs)
 
@@ -128,11 +128,11 @@ function create_visualizer()
 end
 
 
-function joystick_plot(js, plot_elements, plot_data, vis_flag)
+function joystick_plot(js, plot_elements, plot_data)
 
     joystick_plot_toggle = plot_elements[:joystick_plot_toggle]
 
-    while (joystick_plot_toggle.active[] && vis_flag == true)
+    while (joystick_plot_toggle.active[])
 
         # get axis values
         js_state = get_joystick_state(js)
@@ -150,28 +150,14 @@ end
 
 function start_visualization(js, plot_elements, plot_data)
 
-    start_vis_btn = plot_elements[:start_vis_btn]
+    calibrate_btn = plot_elements[:calibrate_btn]
     joystick_plot_toggle = plot_elements[:joystick_plot_toggle]
 
-    vis_flag = false
+    on(joystick_plot_toggle.active) do click
 
-    on(start_vis_btn.clicks) do click
-
-        # start visualization if not already running
-        if vis_flag == false && joystick_plot_toggle.active[]
-
-            println("Vis started")
-
-            @async begin
-                # set flag
-                vis_flag = true
-
-                joystick_plot(js, plot_elements, plot_data, vis_flag)
-            end
+        @async begin
+            joystick_plot(js, plot_elements, plot_data)
         end
-
-        # stop visulization if already running
-        vis_flag = false
     end
 end
 
